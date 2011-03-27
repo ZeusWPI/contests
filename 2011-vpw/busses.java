@@ -14,7 +14,7 @@ import java.util.Set;
  *
  * @author Pieter
  */
-public class Main {
+public class Busses {
     public static void main(String[] args) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         int n = Integer.parseInt(reader.readLine());
