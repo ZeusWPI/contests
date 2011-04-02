@@ -17,9 +17,9 @@ valid (Measurement l _ GT) (Fake c Lighter) = c `S.member` l
 
 parseMeasurement :: String -> Measurement
 parseMeasurement str =
-    let [l, r, result] = words str
-    in Measurement (S.fromList l) (S.fromList r) (parseOrdering result)
+    Measurement (S.fromList l) (S.fromList r) (parseOrdering result)
   where
+    [l, r, result] = words str
     parseOrdering "omhoog" = LT
     parseOrdering "omlaag" = GT
     parseOrdering _        = EQ
@@ -34,8 +34,7 @@ main = do
     replicateM_ cases $ do
         n <- read <$> getLine
         measurements <- map parseMeasurement <$> replicateM n getLine
-        let solutions' = solutions measurements
-        putStrLn $ case solutions' of
+        putStrLn $ case solutions measurements of
             []               -> "Inconsistente gegevens."
             [Fake c Heavier] -> "Het valse geldstuk " ++ [c] ++ " is zwaarder."
             [Fake c Lighter] -> "Het valse geldstuk " ++ [c] ++ " is lichter."
