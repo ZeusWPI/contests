@@ -9,15 +9,15 @@ compress = concatMap compress' . group
     compress' (x : []) = (x : [])
     compress' (y : x : []) = (y : x : [])
     compress' (z : y : x : []) = (z : y : x : [])
-    compress' cs = '-' : idx (min 26 $ length cs) : head cs : compress' (drop 26 cs)
+    compress' cs =
+        '-' : idx (length $ take 26 cs) : head cs : compress' (drop 26 cs)
 
 idx :: Int -> Char
 idx i = chr (ord 'A' + i - 1)
 
 decompress :: String -> String
 decompress [] = []
-decompress ('-' : xs) = let (n : c : ys) = xs
-                        in replicate (count n) c ++ decompress ys
+decompress ('-' : n : c : ys) = replicate (count n) c ++ decompress ys
 decompress (x : xs) = x : decompress xs 
 
 count :: Char -> Int
@@ -33,7 +33,4 @@ main = do
             [x, "???"] -> out x (compress x)
             _          -> return ()
   where
-    out x y = do
-        putStr x
-        putStr " "
-        putStrLn y
+    out x y = putStrLn $ x ++ " " ++ y
