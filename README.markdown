@@ -1,5 +1,5 @@
 contests
 ========
 
-Solutions to programming contests we took part it, or stuff we made for
+Solutions to programming contests we took part in, or stuff we made for
 practice.
