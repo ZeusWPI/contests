@@ -1,16 +1,15 @@
 import Control.Applicative
 import Control.Monad.State
-import Control.Monad
 
 import Data.List (intercalate)
 
-zeef s = zeef' [2..s]
+sieve s = sieve' [2..s]
 
-zeef' [] = []
-zeef' (y:ys) = y : (zeef' . filter (\l -> l `mod` y /= 0) $ ys)
+sieve' [] = []
+sieve' (y:ys) = y : (sieve' . filter (\l -> l `mod` y /= 0) $ ys)
 
 erasto :: [Int]
-erasto = zeef 100
+erasto = sieve 100
 
 solve n = solve' n primes n (0,[])
   where
@@ -33,14 +32,9 @@ solve' num primes minlen (len,s) =
                                       else (ml, res)
                     else (ml, res)
 
-
 main = do
     n <- read <$> getLine
     replicateM_ n $ do
         num <- read <$> getLine
         let (_, ar) = solve num
         putStrLn $ intercalate "+" $ map show $ reverse ar
-
-
-
-
