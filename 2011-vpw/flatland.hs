@@ -35,3 +35,20 @@ lineIntersection ((x1, y1), (x2, y2)) ((x3, y3), (x4, y4))
     post = x3 * y4 - y3 * x4
     x    = (pre * (x3 - x4) - (x1 - x2) * post) / d
     y    = (pre * (y3 - y4) - (y1 - y2) * post) / d
+
+data Soldier = Soldier Rectangular Double Double  -- (x, y) d h
+
+soldierCorners :: Soldier -> [Rectangular]
+soldierCorners (Soldier (x, y) d h) =
+    [ (x + dx, y + dy)
+    | i <- [0 .. h - 1]
+    , let (dx, dy) = fromPolar (d, i * step)
+    ]
+  where
+    step = 2 * pi / h
+
+soldierLines :: Soldier -> [Line]
+soldierLines soldier = zip corners corners'
+  where
+    corners  = soldierCorners soldier
+    corners' = tail corners ++ [head corners]
