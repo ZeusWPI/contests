@@ -3,22 +3,24 @@ import Control.Monad.State
 
 import Data.List (intercalate)
 
+sieve :: Integral a => a -> [a]
 sieve s = sieve' [2..s]
-
-sieve' [] = []
-sieve' (y:ys) = y : (sieve' . filter (\l -> l `mod` y /= 0) $ ys)
+  where
+    sieve' []       = []
+    sieve' (y : ys) = y : (sieve' . filter (\l -> l `mod` y /= 0) $ ys)
 
 erasto :: [Int]
 erasto = sieve 100
 
-solve n = solve' n primes n (0,[])
+solve :: Int -> (Int, [Int])
+solve n = solve' n primes n (0, [])
   where
     primes = takeWhile (<= n) erasto
 
 solve' :: Int -> [Int] -> Int -> (Int,[Int]) -> (Int, [Int])
-solve' 0 _ minlen (len,s)        = (len, s)
-solve' _ [] _ (len,s)            = (len, s)
-solve' num primes minlen (len,s) =
+solve' 0   _      _      (len, s) = (len, s)
+solve' _   []     _      (len, s) = (len, s)
+solve' num primes minlen (len, s) =
     foldr f (minlen, s) primes'
   where
     -- only take primes lower than num
@@ -26,12 +28,14 @@ solve' num primes minlen (len,s) =
 
     minLenReq p = num `div` p
 
-    f pr (ml,res) = if ml > len + minLenReq pr then
-                        let (l',res') = solve' (num - pr) primes' ml ((len + 1),(pr:s))
-                        in if l' < ml then (l', res')
-                                      else (ml, res)
-                    else (ml, res)
+    f pr (ml,res)
+        | ml <= len + minLenReq pr = (ml, res)
+        | l' < ml                  = (l', res')
+        | otherwise                = (ml, res)
+      where
+        (l', res') = solve' (num - pr) primes' ml ((len + 1), (pr : s))
 
+main :: IO ()
 main = do
     n <- read <$> getLine
     replicateM_ n $ do
