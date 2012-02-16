@@ -1,6 +1,7 @@
 import Control.Applicative ((<$>))
 import Control.Monad (forM_, replicateM, replicateM_)
 import Data.List (intercalate)
+import Data.IORef (IORef, newIORef, readIORef, writeIORef)
 
 import Debug.Trace
 
@@ -29,33 +30,39 @@ parseBomb str = case map read (words str) of
     [x, y, a, b, r] -> Bomb (x, y) (fromDegrees a) (fromDegrees b) r
     _               -> error "parseBomb"
 
-bombLines :: Bomb -> (Line, Line)
-bombLines (Bomb (x, y) a b r) = (((x, y), end1), ((x, y), end2))
+bombLines :: Bomb -> [Line]
+bombLines (Bomb (x, y) a b r) =
+    [((x, y), end1), ((x, y), end2)] -- , (end1, end2)]
   where
-    end1 = let (dx, dy) = fromPolar (r, a)     in (x + dx, y + dy)
-    end2 = let (dx, dy) = fromPolar (r, a + b) in (x + dx, y + dy)
+    end1 = let (dx, dy) = fromPolar (r, b + a / 2) in (x + dx, y + dy)
+    end2 = let (dx, dy) = fromPolar (r, b - a / 2) in (x + dx, y + dy)
 
 inRadius :: Bomb -> Rectangular -> Bool
 inRadius (Bomb (bx, by) ba bb br) (x, y)
     | r > br    = False
-    | otherwise = q >= ba && q < ba + bb
+    | otherwise = q >= bb - ba / 2 && q <= bb + ba / 2
   where
     (r, q) = toPolar (x - bx, y - by)
 
 lineIntersection :: Line -> Line -> Bool
 lineIntersection ((x1, y1), (x2, y2)) ((x3, y3), (x4, y4))
-    | d == 0                         = False
-    | x < min x1 x2 || x > max x2 x2 = False
-    | x < min x3 x4 || x > max x3 x4 = False
-    | y < min y1 y2 || y > max y1 y2 = False
-    | y < min y3 y4 || y > max y3 y4 = False
-    | otherwise                      = True
+    | d == 0                         = false
+    | x < min x1 x2 - eps || x > max x1 x2 + eps = False
+    | x < min x3 x4 - eps || x > max x3 x4 + eps = False
+    | y < min y1 y2 - eps || y > max y1 y2 + eps = False
+    | y < min y3 y4 - eps || y > max y3 y4 + eps = False
+    | otherwise                                  = True
   where
     d    = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
     pre  = x1 * y2 - y1 * x2
     post = x3 * y4 - y3 * x4
     x    = (pre * (x3 - x4) - (x1 - x2) * post) / d
     y    = (pre * (y3 - y4) - (y1 - y2) * post) / d
+
+    -- Gotta love floating points
+    eps = 0.0000001
+
+    false = traceShow (x, y) False
 
 data Soldier = Soldier Rectangular Double Double  -- (x, y) d h
 
@@ -68,7 +75,7 @@ soldierPoints :: Soldier -> [Rectangular]
 soldierPoints (Soldier (x, y) d h) =
     [ (x + dx, y + dy)
     | i <- [0 .. h - 1]
-    , let (dx, dy) = fromPolar (d, i * step)
+    , let (dx, dy) = fromPolar (d / 2, i * step)
     ]
   where
     step = 2 * pi / h
@@ -82,7 +89,7 @@ soldierLines soldier = zip points points'
 kills :: [Bomb] -> Soldier -> Bool
 kills bombs soldier =
     killsByEdge bombs soldier ||
-    trace "death by splitting" (any (\b -> killsBySplitting b soldier) bombs)
+    (any (\b -> killsBySplitting b soldier) bombs)
 
 killsByEdge :: [Bomb] -> Soldier -> Bool
 killsByEdge bombs soldier =
@@ -96,24 +103,30 @@ killsByEdge bombs soldier =
       
 killsBySplitting :: Bomb -> Soldier -> Bool
 killsBySplitting bomb soldier =
-    let (l1, l2) = bombLines bomb
-    in all killsBySplitting' [l1, l2]
+    let numSplits = sum [length (splits l) | l <- bombLines bomb]
+    in traceShow numSplits $ numSplits > 2
   where
-    killsBySplitting' l = any (lineIntersection l) (soldierLines soldier)
-
-plotBomb :: Bomb -> String
-plotBomb bomb =
-    let ((p1, p2), (_, p3)) = bombLines bomb
-    in plotPoints "red" [p1, p2, p3]
-
-plotSoldier :: Soldier -> String
-plotSoldier = plotPoints "blue" . soldierPoints
+    splits l = filter (lineIntersection l) (soldierLines soldier)
 
 plotScene :: [Bomb] -> [Soldier] -> String
 plotScene bombs soldiers = unlines $
-    ["plot(c(), xlim=c(-30, 30), ylim=c(-30, 30))"] ++
-    map plotBomb bombs ++
-    map plotSoldier soldiers
+    ("plot(c(), xlim=c" ++ show xlim ++ ", ylim=c" ++ show ylim ++ ")") :
+    plotPoints "red" bps :
+    plotPoints "blue" sps :
+    []
+  where
+    bombPoints bomb = 
+        let ((p1, p2) : (_, p3) : _) = bombLines bomb
+        in [p1, p2, p3]
+
+    bps = concatMap bombPoints bombs
+    sps = concatMap soldierPoints soldiers
+
+    (bxs, bys) = unzip bps
+    (sxs, sys) = unzip sps
+    (xs, ys)   = (bxs ++ sxs, bys ++ sys)
+    xlim       = (minimum xs, maximum xs)
+    ylim       = (minimum ys, maximum ys)
 
 plotPoints :: String -> [Rectangular] -> String
 plotPoints col ps =
@@ -132,3 +145,21 @@ main = do
         putStr $ plotScene bombs soldiers
         forM_ soldiers $ \soldier -> putStrLn $
             if kills bombs soldier then "dood" else "levend"
+
+main' :: IO ()
+main' = do
+    cases   <- readLn
+    outputs <- lines <$> readFile "output.txt"
+    ref     <- newIORef outputs
+    forM_ [1 .. cases] $ \i -> do
+        [numBombs, numSoldiers] <- map read . words <$> getLine
+        bombs    <- map parseBomb    <$> replicateM numBombs getLine
+        soldiers <- map parseSoldier <$> replicateM numSoldiers getLine
+
+        putStrLn $ "pdf(file='output/" ++ show i ++ ".pdf')"
+        putStr $ plotScene bombs soldiers
+
+        (outs, outs') <- splitAt (length soldiers) <$> readIORef ref 
+        writeIORef ref outs'
+        forM_ outs $ \out -> putStrLn $ "title('" ++ out ++ "')"
+        putStrLn "dev.off()"
