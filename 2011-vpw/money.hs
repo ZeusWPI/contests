@@ -28,7 +28,7 @@ parse str = case map read (words str) of
 matrix :: Amount -> Coins -> Array (Int, Int) Int
 matrix amount coins = matrix'
   where
-    matrix'        = makeMatrix (amount + 1) (snd (A.bounds coins) + 1) elemAt
+    matrix'      = makeMatrix (amount + 1) (snd (A.bounds coins) + 1) elemAt
     elemAt amt 0 = if amt /? coins A.! 0 then 1 else 0
     elemAt amt i = sum
         [matrix' A.! (a, i - 1) | a <- [0 .. amt], (a - amt) /? coins A.! i]
