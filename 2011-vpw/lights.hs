@@ -1,20 +1,10 @@
 import Control.Applicative ((<$>))
 import Control.Monad (replicateM, replicateM_)
+import Data.Char (isAlpha)
 import Data.List (foldl')
 import Data.Map (Map)
 import Data.Maybe (fromMaybe)
 import qualified Data.Map as M
-
-data Tile = Empty | Char Char | Slash | Backslash
-    deriving (Eq, Show)
-
-fromGrid :: Map (Int, Int) Char -> Map (Int, Int) Tile
-fromGrid = M.map parseTile
-  where
-    parseTile ' '  = Empty
-    parseTile '/'  = Slash
-    parseTile '\\' = Backslash
-    parseTile x    = Char x
 
 data Dir = U | R | D | L
     deriving (Show)
@@ -37,26 +27,26 @@ backslash R = D
 backslash D = R
 backslash L = U
 
-trace :: Map (Int, Int) Tile
-      -> Tile
+trace :: Map (Int, Int) Char
+      -> Char
       -> (Int, Int)
       -> Dir
       -> Bool
-trace grid goal pos dir = case tile of
-    Char x -> Char x == goal
-    _      -> trace grid goal pos' dir'
+trace grid goal pos dir
+    | isAlpha tile = tile == goal
+    | otherwise    = trace grid goal pos' dir'
   where
     pos' = pos .+ dir
-    tile = fromMaybe Empty $ M.lookup pos' grid
+    tile = fromMaybe '?' $ M.lookup pos' grid
     dir' = case tile of
-        Slash     -> slash dir
-        Backslash -> backslash dir
-        _         -> dir
+        '/'  -> slash dir
+        '\\' -> backslash dir
+        _    -> dir
 
 starts :: Int
        -> Int
-       -> Map (Int, Int) Tile
-       -> [(Tile, (Int, Int), Dir)]
+       -> Map (Int, Int) Char
+       -> [(Char, (Int, Int), Dir)]
 starts height width grid =
     [start 0            c           D | c <- [1 .. width]]  ++  -- Top
     [start r            (width + 1) L | r <- [1 .. height]] ++  -- Right
@@ -77,6 +67,6 @@ main = do
     cases <- readLn
     replicateM_ cases $ do
         [h, w] <- map read . words <$> getLine
-        grid   <- fromGrid . parseGrid <$> replicateM (h + 2) getLine
+        grid   <- parseGrid <$> replicateM (h + 2) getLine
         let ok = all (\(c, p, d) -> trace grid c p d) $ starts h w grid
         putStrLn $ if ok then "correct" else "verkeerd"
