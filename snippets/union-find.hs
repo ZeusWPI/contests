@@ -11,7 +11,8 @@ find x unions = case M.lookup x unions of
     Nothing         -> (x, unions)
     Just y
         | x == y    -> (x, unions)
-        | otherwise -> let (r, unions') = find y unions in (r, unions')
+        | otherwise -> let (r, unions') = find y unions
+                       in  (r, M.insert x r unions')
 
 isUnion :: Ord a => a -> a -> Unions a -> (Bool, Unions a)
 isUnion x y unions =
