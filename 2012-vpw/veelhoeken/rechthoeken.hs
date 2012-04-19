@@ -46,7 +46,7 @@ rects lines' = S.fromList
     , p2 <- maybeToList $ inter h1 v2
     , p3 <- maybeToList $ inter h2 v1
     , p4 <- maybeToList $ inter h2 v2
-    -- , length (nub [p1, p2, p3, p4]) == 4  -- Unique
+    , length (nub [p1, p2, p3, p4]) == 4  -- Unique
     ]
   where
     (horis, verts) = partition horizontal lines'
