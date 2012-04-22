@@ -3,14 +3,14 @@ import Control.Monad (forM_, replicateM_)
 import Data.Set (Set)
 import qualified Data.Set as S
 
-type C = Int
+newtype C = C {unC :: Int}
 
 circle :: Int -> Int -> ([C] -> [C]) -> ([C] -> [C]) -> Bool -> [C]
        -> (Int, [C], ([C] -> [C]), Bool)
 circle _ x re el e [] = (x, re [], el, e)
 circle n x re el e (c : cs)
-    | x == c    = circle n 1  re           (el . (c :)) True cs
-    | otherwise = circle n x' (re . (c :)) el           e    cs
+    | x == unC c      = circle n 1  re           (el . (c :)) True cs
+    | otherwise       = circle n x' (re . (c :)) el           e    cs
   where
     x' = if x >= n then 1 else x + 1
 
@@ -27,8 +27,8 @@ main = do
     cases <- readLn
     replicateM_ cases $ do
         (n : cs) <- map read . words <$> getLine
-        let (cs', el) = circles n 1 S.empty id cs
-        forM_ el $ putStrLn . (++ " gevangen") . show
+        let (cs', el) = circles n 1 S.empty id (map C cs)
+        forM_ el $ putStrLn . (++ " gevangen") . show . unC
         putStrLn $ if null cs'
             then "alles gevangen"
             else "er kunnen geen kaarten meer gevangen worden"
