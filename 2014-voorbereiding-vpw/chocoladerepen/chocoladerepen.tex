@@ -1,0 +1,47 @@
+\documentclass[a4paper]{article}
+\usepackage[dutch]{babel}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{verbatim}
+\setlength{\parindent}{0ex}
+\setlength{\parskip}{1ex}
+
+\begin{document}
+\section*{Chocoladerepen}
+\flushright
+\includegraphics[width=3em]{../logo-new.png}
+\flushleft
+
+Alice en Bob hebben zelf een spelletje uitgevonden, waarbij ze $n$
+chocoladerepen achter elkaar plaatsen. Alice begint de chocoladerepen \'e\'en
+na \'e\'en op te eten van links naar rechts, en Bob doet hetzelfde van rechts
+naar links. Alice en Bob eten even snel, en van elke chocoladereep is op
+voorhand geweten hoeveel tijd er nodig is om ze op te eten. Als Alice of Bob
+een chocoladereep volledig heeft opgegeten, dan begint zij/hij onmiddellijk de
+volgende op te eten. Bij hun spelletje is het niet toegelaten om twee
+chocoladerepen terzelfdertijd op te eten, chocoladerepen maar half op te eten,
+of pauzes in te lassen. Als beiden op hetzelfde moment dezelfde chocoladereep
+willen opeten, dan is Bob de hoffelijkheid zelve en laat Alice voorgaan.
+
+\subsection*{Input}
+
+Op de eerste lijn van de input vind je steeds een geheel getal. Dit stelt het
+aantal gevallen voor. Per geval is er 1 lijn van gehele getallen. Elk getal
+staat voor de tijd om deze chocoladereep op te eten. De lijn \texttt{3 4 5 2}
+stelt bijvoorbeeld 4 chocoladerepen voor, met van links naar rechts 3, 4, 5 en 2
+tijdseenheiden om ze op te eten.
+
+\subsubsection*{Voorbeeldinput}
+
+\verbatiminput{voorbeeld.invoer}
+
+\subsection*{Output}
+
+Per geval verwachten we het eental repen dat Alice op at, en het aantal repen
+dat Bob op kreeg, gescheiden door een spatie.
+
+\subsubsection*{Voorbeeldoutput}
+
+\verbatiminput{voorbeeld.uitvoer}
+
+\end{document}
